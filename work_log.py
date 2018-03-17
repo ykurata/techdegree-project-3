@@ -71,7 +71,7 @@ Enter the letter associated with the search you want: """)
 
     if search_choice == "a":
         clear_screen()
-        find_date()
+        show_dates()
         play_again()
 
     elif search_choice == "b":
@@ -121,9 +121,15 @@ def show_dates():
     with open('log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for count, row in enumerate(reader, 1):
-            dates = '{}. {}'.format(count, row[0])
-            print(dates)
-
+            try:
+                dates = '{}. {}'.format(count, row[0])
+                print(dates)
+            except IndexError:
+                clear_screen()
+                print("There is no entries.")
+                break
+        else:
+            find_date()
 
 def find_date():
     """
@@ -131,9 +137,7 @@ def find_date():
     Checks if the number is valid or not.
     Prints the entry.
     """
-    show_dates()
-
-    date_choice = input("Enter the number associated with the date you want: ")
+    date_choice = input("\nEnter the number associated with the date you want: ")
     try:
         date_choice = int(date_choice)
     except ValueError:
@@ -160,24 +164,28 @@ def find_range():
     Checks if the dates are valid dates.
     Prints the entry between the start date and end date.
     """
-    while True:
-        first_date = input("Enter the start date in MM/DD/YYYY format: ")
-        second_date = input("Enter the end date in MM/DD/YYYY format: ")
-        try:
-            first_date = datetime.strptime(first_date, '%m/%d/%Y')
-            second_date = datetime.strptime(second_date, '%m/%d/%Y')
-        except ValueError:
-            print("\n{} doesn't seem to be a valid date.\n".format(first_date))
-            print("\n{} doesn't seem to be a valid date.\n".format(second_date))
-        else:
-            with open('log.csv') as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    # Checks if there are entries in the date range
+
+    first_date = input("Enter the start date in MM/DD/YYYY format: ")
+    second_date = input("Enter the end date in MM/DD/YYYY format: ")
+    try:
+        first_date = datetime.strptime(first_date, '%m/%d/%Y')
+        second_date = datetime.strptime(second_date, '%m/%d/%Y')
+    except ValueError:
+        print("\n{} doesn't seem to be a valid date.\n".format(first_date))
+        print("\n{} doesn't seem to be a valid date.\n".format(second_date))
+        find_range()
+    else:
+        with open('log.csv') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                try:
                     if first_date <= datetime.strptime(row[0],
                         '%m/%d/%Y')<= second_date:
                         show_entry(row)
-                else:
+                    else:
+                        print("No results.")
+                except IndexError:
+                    print("\nThere is no entries.")
                     break
 
 
@@ -190,9 +198,13 @@ def find_time():
     with open('log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
-            if time == row[2]:
-                clear_screen()
-                show_entry(row)
+            try:
+                if time == row[2]:
+                    clear_screen()
+                    show_entry(row)
+                    break
+            except IndexError:
+                print("\nThere is no entries.")
                 break
         else:
             clear_screen()
@@ -209,13 +221,17 @@ def find_exact_search():
     with open('log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
-            if search in row[1]:
-                clear_screen()
-                show_entry(row)
-                break
-            elif search in row[3]:
-                clear_screen()
-                show_entry(row)
+            try:
+                if search in row[1]:
+                    clear_screen()
+                    show_entry(row)
+                    break
+                elif search in row[3]:
+                    clear_screen()
+                    show_entry(row)
+                    break
+            except IndexError:
+                print("\nThere is no entries.")
                 break
         else:
             clear_screen()
@@ -233,16 +249,18 @@ def find_pattern():
         pattern = re.compile(regex, re.I)
     except re.error:
         print("Invalid regular expression. Try again\n")
-        find_pattern()
     else:
         with open('log.csv') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
-                if (re.findall(pattern, row[1]) or
-                    re.findall(pattern, row[3])):
-                    show_entry(row)
-            else:
-                pass
+                try:
+                    if (re.findall(pattern, row[1]) or
+                        re.findall(pattern, row[3])):
+                        show_entry(row)
+                    else:
+                        print("No results.")
+                except IndexError:
+                    print("\nThere is no entries.")
 
 
 def play_again():
